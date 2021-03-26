@@ -2,43 +2,43 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: kibana
-  namespace: logging
+  name: {{ .Values.kibana.name }}
+  namespace: {{ .Values.ns }}
   labels:
-    app: kibana
+    app: {{ .Values.kibana.name }}
 spec:
   ports:
-  - port: 5601
+  - port: {{ .Values.kibana.port }}
   selector:
-    app: kibana
+    app: {{ .Values.kibana.name }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kibana
-  namespace: logging
+  name: {{ .Values.kibana.name }}
+  namespace: {{ .Values.ns }}
   labels:
-    app: kibana
+    app: {{ .Values.kibana.name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kibana
+      app: {{ .Values.kibana.name }}
   template:
     metadata:
       labels:
-        app: kibana
+        app: {{ .Values.kibana.name }}
     spec:
       containers:
-      - name: kibana
+      - name: {{ .Values.kibana.name }}
         image: docker.elastic.co/kibana/kibana:7.2.0
         resources:
           limits:
-            cpu: 1000m
+            cpu: {{ .Values.resources.limits.cpu }}
           requests:
-            cpu: 100m
+            cpu: {{ .Values.resources.requests.cpu }}
         env:
-          - name: ELASTICSEARCH_URL
-            value: http://elasticsearch:9200
+          - name: {{ .Values.kibana.env.name }}
+            value: {{ .Values.kibana.env.value }}
         ports:
-        - containerPort: 5601
+        - containerPort: {{ .Values.kibana.port }}

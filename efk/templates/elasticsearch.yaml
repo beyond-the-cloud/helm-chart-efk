@@ -2,54 +2,54 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: elasticsearch
+  name: {{ .Values.es.name }}
   namespace: {{ .Values.ns }}
   labels:
-    app: elasticsearch
+    app: {{ .Values.es.name }}
 spec:
   selector:
-    app: elasticsearch
+    app: {{ .Values.es.name }}
   clusterIP: None
   ports:
-    - port: 9200
-      name: rest
-    - port: 9300
-      name: inter-node
+    - port: {{ .Values.es.port1 }}
+      name: {{ .Values.es.portname1 }}
+    - port: {{ .Values.es.port2 }}
+      name: {{ .Values.es.portname2 }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: es-cluster
+  name: {{ .Values.es.ssname }}
   namespace: {{ .Values.ns }}
 spec:
-  serviceName: elasticsearch
-  replicas: 3
+  serviceName: {{ .Values.es.name }}
+  replicas: {{ .Values.es.replicas }}
   selector:
     matchLabels:
-      app: elasticsearch
+      app: {{ .Values.es.name }}
   template:
     metadata:
       labels:
-        app: elasticsearch
+        app: {{ .Values.es.name }}
     spec:
       containers:
-      - name: elasticsearch
-        image: docker.elastic.co/elasticsearch/elasticsearch:7.2.0
+      - name: {{ .Values.es.name }}
+        image: {{ .Values.es.image }}
         resources:
             limits:
-              cpu: 1000m
+              cpu: {{ .Values.resources.limits.cpu }}
             requests:
-              cpu: 100m
+              cpu: {{ .Values.resources.requests.cpu }}
         ports:
-        - containerPort: 9200
-          name: rest
+        - containerPort: {{ .Values.es.port1 }}
+          name: {{ .Values.es.portname1 }}
           protocol: TCP
-        - containerPort: 9300
-          name: inter-node
+        - containerPort: {{ .Values.es.port2 }}
+          name: {{ .Values.es.portname2 }}
           protocol: TCP
         volumeMounts:
-        - name: data
-          mountPath: /usr/share/elasticsearch/data
+        - name: {{ .Values.es.volume.name }}
+          mountPath: {{ .Values.es.volume.mountPath }}
         env:
           - name: cluster.name
             value: k8s-logs
@@ -57,12 +57,12 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
-          - name: discovery.seed_hosts
-            value: "es-cluster-0.elasticsearch,es-cluster-1.elasticsearch,es-cluster-2.elasticsearch"
-          - name: cluster.initial_master_nodes
-            value: "es-cluster-0,es-cluster-1,es-cluster-2"
-          - name: ES_JAVA_OPTS
-            value: "-Xms512m -Xmx512m"
+          - name: {{ .Values.es.env.name1 }}
+            value: {{ .Values.es.env.value1 | quote }}
+          - name: {{ .Values.es.env.name2 }}
+            value: {{ .Values.es.env.value2 | quote }}
+          - name: {{ .Values.es.env.name3 }}
+            value: {{ .Values.es.env.value3 | quote }}
       initContainers:
       - name: fix-permissions
         image: busybox
@@ -70,8 +70,8 @@ spec:
         securityContext:
           privileged: true
         volumeMounts:
-        - name: data
-          mountPath: /usr/share/elasticsearch/data
+        - name: {{ .Values.es.volume.name }}
+          mountPath: {{ .Values.es.volume.mountPath }}
       - name: increase-vm-max-map
         image: busybox
         command: ["sysctl", "-w", "vm.max_map_count=262144"]
@@ -86,10 +86,10 @@ spec:
   - metadata:
       name: data
       labels:
-        app: elasticsearch
+        app: {{ .Values.es.name }}
     spec:
       accessModes: [ "ReadWriteOnce" ]
       storageClassName: gp2
       resources:
         requests:
-          storage: 100Gi
+          storage: {{ .Values.resources.requests.storage }}
