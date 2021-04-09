@@ -89,7 +89,11 @@ spec:
         app: {{ .Values.es.name }}
     spec:
       accessModes: [ "ReadWriteOnce" ]
+      {{ if eq .Values.cloud "gcp" }}
+      storageClassName: standard
+      {{ else if eq .Values.cloud "aws" }}
       storageClassName: gp2
+      {{ end }}
       resources:
         requests:
           storage: {{ .Values.resources.requests.storage }}

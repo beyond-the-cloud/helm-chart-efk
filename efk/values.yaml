@@ -1,3 +1,6 @@
+# either 'aws' or 'gcp'
+cloud: gcp
+
 ns: logging
 
 es:
